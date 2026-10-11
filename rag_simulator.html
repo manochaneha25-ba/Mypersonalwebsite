@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAG Simulator — Learn Step by Step</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#65718a;--line:#dfe6f0;--blue:#315efb;--teal:#0f9d8a;--orange:#c56a13;--soft:#edf2ff;--shadow:0 8px 26px #1827470d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:26px 20px 22px;background:linear-gradient(120deg,#14234a,#315efb);color:#fff}
+.wrap{max-width:1120px;margin:auto}header h1{margin:0 0 6px;font-size:clamp(25px,4vw,36px)}header p{margin:0;max-width:760px;color:#e4eaff}
+main{max-width:1120px;margin:20px auto;padding:0 16px 44px}.notice{background:#fff8e8;border:1px solid #f0d9a9;padding:12px 14px;border-radius:12px;margin-bottom:16px;color:#684a16}
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px}.panel,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.sidebar{padding:16px;height:max-content;position:sticky;top:12px}.side-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:2px 0 10px}
+.step{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:0;background:transparent;padding:10px;border-radius:10px;color:var(--ink);cursor:pointer;margin:2px 0}.step:hover{background:#f4f6ff}.step.active{background:var(--soft);outline:1px solid #cdd8ff}.num{width:27px;height:27px;flex:0 0 27px;border-radius:50%;background:#e9edf5;color:#526079;display:grid;place-items:center;font-weight:800}.step.active .num{background:var(--blue);color:#fff}.step strong{display:block;font-size:14px}.step small{display:block;color:var(--muted);font-size:12px}
+.content{min-width:0}.card{padding:20px;margin-bottom:15px}.eyebrow{font-size:12px;color:var(--blue);font-weight:800;letter-spacing:.08em;text-transform:uppercase}.card h2{margin:4px 0 6px;font-size:24px}.muted{color:var(--muted)}.controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+button,.btn{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);padding:9px 13px;background:#fff;color:var(--ink)}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button:disabled{opacity:.4;cursor:not-allowed}
+textarea,input,select{font:inherit;border:1px solid #cfd8e6;border-radius:10px;padding:10px;width:100%;background:#fff;color:var(--ink)}textarea{min-height:100px;resize:vertical}.field{margin:14px 0}.field label{display:block;font-weight:700;margin-bottom:6px}.field .hint{font-size:12px;color:var(--muted);margin-top:5px}
+.pill{display:inline-block;background:#eef2f8;color:#44516a;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;margin:2px 4px 2px 0}.pill.blue{background:#e9efff;color:#294fe0}.pill.green{background:#e2f7f2;color:#087969}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chunk{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;background:#fbfcff}.chunk h4{margin:0 0 5px;font-size:13px;color:#34405a}.chunk p{margin:0;font-size:14px}.chunk.selected{border:2px solid var(--teal);background:#f0fcf8}.barrow{display:grid;grid-template-columns:minmax(100px,150px) 1fr 48px;gap:10px;align-items:center;margin:10px 0;font-size:13px}.bar{height:10px;background:#e9edf5;border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--blue);border-radius:99px}.barrow .score{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:12px 0}.flow span{padding:8px 10px;background:#edf2ff;border-radius:9px;font-size:13px;font-weight:700}.flow b{color:#8a96ad}
+.callout{padding:12px;border-left:4px solid var(--teal);background:#effbf8;border-radius:8px;margin:12px 0}.quiz{border:1px dashed #b7c5dc;padding:14px;border-radius:12px;margin-top:14px}.quiz label{display:block;padding:7px 9px;border:1px solid var(--line);border-radius:8px;margin:7px 0;cursor:pointer}.feedback{font-weight:700;margin-top:8px}.tiny{font-size:12px}.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.progress{height:6px;background:#dfe6f0;border-radius:9px;overflow:hidden;margin:12px 0 0}.progress div{height:100%;background:#6ee7d2;width:0;transition:width .2s}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:8px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.sidebar{position:static}.step-list{display:grid;grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.card{padding:16px}.barrow{grid-template-columns:95px 1fr 40px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>RAG Simulator</h1><p>Retrieval-Augmented Generation, made visual. Walk through how documents become searchable context and how that context helps an LLM answer a question.</p></div></header>
+<main>
+<div class="notice"><strong>Learning note:</strong> this is a small, explainable simulation—not a real embedding model or an LLM. The “similarity” scores use simple word overlap so you can see the retrieval idea without hidden math.</div>
+<div class="layout">
+<aside class="panel sidebar">
+ <div class="side-title">Pipeline · 6 steps</div>
+ <div class="step-list" id="stepList">
+  <button class="step active" data-step="0"><span class="num">1</span><span><strong>Ask a question</strong><small>Define the query</small></span></button>
+  <button class="step" data-step="1"><span class="num">2</span><span><strong>Load documents</strong><small>Your knowledge base</small></span></button>
+  <button class="step" data-step="2"><span class="num">3</span><span><strong>Chunk text</strong><small>Split into passages</small></span></button>
+  <button class="step" data-step="3"><span class="num">4</span><span><strong>Embed & index</strong><small>Make chunks searchable</small></span></button>
+  <button class="step" data-step="4"><span class="num">5</span><span><strong>Retrieve context</strong><small>Find relevant chunks</small></span></button>
+  <button class="step" data-step="5"><span class="num">6</span><span><strong>Generate answer</strong><small>Ground the response</small></span></button>
+ </div>
+ <div class="progress"><div id="progressFill"></div></div>
+ <div class="controls"><button id="prevBtn">← Back</button><button id="nextBtn" class="primary">Next step →</button></div>
+ <p class="tiny muted">Tip: change the question or documents, then revisit retrieval.</p>
+</aside>
+<section class="content" id="content" aria-live="polite"></section>
+</div>
+<footer>RAG = retrieval + context + generation · Try changing the query to see retrieval rankings change.</footer>
+</main>
+<script>
+const defaultDocs=[
+ {name:"Leave policy",text:"Employees can carry forward up to 5 unused vacation days into the next calendar year. Leave requests should be submitted to the manager at least 2 weeks in advance."},
+ {name:"Remote work guide",text:"Employees may work remotely up to 3 days per week with manager approval. New joiners should work from the office during onboarding."},
+ {name:"Expense policy",text:"Business travel expenses must be submitted within 30 days. Receipts are required for claims above 25 dollars. Meals during approved business travel are reimbursable."},
+ {name:"Support handbook",text:"IT support is available Monday to Friday, 9 AM to 6 PM. For urgent access issues, contact the service desk and include your employee ID."}
+];
+let state={step:0,query:"How many vacation days can employees carry forward?",docs:defaultDocs.map(x=>({...x})),chunkSize:2,topK:2,chunks:[],ranked:[],selected:[],answer:""};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function tokenize(s){return (s.toLowerCase().match(/[a-z0-9]+/g)||[]).filter(w=>!["the","a","an","to","of","and","is","are","can","be","into","for","with","how","many","what","does","do","it","up","per","in","on"].includes(w));}
+function buildChunks(){let out=[];state.docs.forEach((d,di)=>{let sentences=d.text.match(/[^.!?]+[.!?]?/g)||[d.text];for(let i=0;i<sentences.length;i+=state.chunkSize){let txt=sentences.slice(i,i+state.chunkSize).join(" ").trim();if(txt)out.push({id:"C"+(out.length+1),doc:d.name,text:txt,terms:[...new Set(tokenize(txt))]});}});state.chunks=out;}
+function rankChunks(){let q=[...new Set(tokenize(state.query))];state.ranked=state.chunks.map(c=>{let matches=q.filter(w=>c.terms.includes(w));let score=q.length?matches.length/q.length:0;return {...c,score,matches};}).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));state.selected=state.ranked.filter(c=>c.score>0).slice(0,state.topK);makeAnswer();}
+function makeAnswer(){if(!state.selected.length){state.answer="I couldn't find a relevant passage in the provided documents. Try rephrasing the question or adding a source document.";return;}let q=tokenize(state.query);let sentences=state.selected.map(c=>c.text);let best=sentences.join(" ");state.answer="Based on the retrieved documents: "+best+" [Sources: "+[...new Set(state.selected.map(c=>c.doc))].join(", ")+"]";}
+function updateAll(){buildChunks();rankChunks();render();}
+function nav(n){state.step=Math.max(0,Math.min(5,n));render();}
+function render(){document.querySelectorAll(".step").forEach(b=>b.classList.toggle("active",+b.dataset.step===state.step));document.getElementById("progressFill").style.width=((state.step+1)/6*100)+"%";document.getElementById("prevBtn").disabled=state.step===0;document.getElementById("nextBtn").textContent=state.step===5?"Restart ↺":"Next step →";document.getElementById("nextBtn").onclick=()=>state.step===5?nav(0):nav(state.step+1);document.getElementById("prevBtn").onclick=()=>nav(state.step-1);
+const c=document.getElementById("content");
+const head=(k,title,desc)=>`<div class="card"><div class="eyebrow">Step ${k+1} of 6</div><h2>${title}</h2><p class="muted">${desc}</p>`;
+if(state.step===0){c.innerHTML=head(0,"Ask a question","In RAG, the user’s question is the query. The system uses it to search the knowledge base before asking the language model to answer.")+`
+<div class="field"><label for="query">Your question</label><textarea id="query">${esc(state.query)}</textarea><div class="hint">Try: “What is the remote work policy?” or “When must expenses be submitted?”</div></div>
+<div class="flow"><span>User question</span><b>→</b><span>Search query</span><b>→</b><span>Relevant passages</span></div>
+<div class="callout"><strong>Key idea:</strong> the question is not usually sent to the document database as a perfect exact-text lookup. A retrieval system represents the query in a form that can be compared with document chunks.</div><div class="controls"><button class="primary" id="applyQ">Use this question</button></div></div>`;document.getElementById("applyQ").onclick=()=>{state.query=document.getElementById("query").value.trim()||"What is in the documents?";updateAll();};}
+if(state.step===1){c.innerHTML=head(1,"Load your knowledge base","RAG starts with trusted source material: FAQs, policies, manuals, product docs, or other text. Here you can edit the example documents.")+`
+<div class="field"><label>Document set</label><div id="docs"></div></div>
+<div class="controls"><button id="addDoc">+ Add document</button><button id="resetDocs">Restore examples</button><button class="primary" id="saveDocs">Save documents</button></div>
+<div class="callout"><strong>Why this matters:</strong> the generator does not magically know your private documents. Retrieval gives it relevant source text at answer time.</div></div>`;
+const holder=document.getElementById("docs");state.docs.forEach((d,i)=>{holder.innerHTML+=`<div class="chunk"><div class="field"><label>Document ${i+1} title</label><input data-title="${i}" value="${esc(d.name)}"></div><div class="field"><label>Document text</label><textarea data-doc="${i}">${esc(d.text)}</textarea></div></div>`;});
+document.getElementById("addDoc").onclick=()=>{readDocs();state.docs.push({name:"New document",text:"Write a useful fact or policy here."});render();};document.getElementById("resetDocs").onclick=()=>{state.docs=defaultDocs.map(x=>({...x}));updateAll();};document.getElementById("saveDocs").onclick=()=>{readDocs();updateAll();};}
+if(state.step===2){buildChunks();c.innerHTML=head(2,"Chunk the documents","Long documents are split into smaller passages called chunks. Retrieval usually selects chunks—not entire books—so chunk boundaries affect what the system can find.")+`
+<div class="field"><label for="chunkSize">Sentences per chunk: <strong id="chunkVal">${state.chunkSize}</strong></label><input id="chunkSize" type="range" min="1" max="3" value="${state.chunkSize}"><div class="hint">Smaller chunks are focused but may lose context. Larger chunks preserve context but can include irrelevant details.</div></div>
+<div class="topline"><strong>${state.chunks.length} chunks created</strong><span class="pill">Preview</span></div><div id="chunkList"></div>
+<div class="callout"><strong>Chunking trade-off:</strong> if “5 days” and “carry forward” land in different chunks, the answer may be harder to retrieve. Overlap is often used in production systems to reduce boundary problems.</div></div>`;
+document.getElementById("chunkSize").oninput=e=>{state.chunkSize=+e.target.value;buildChunks();rankChunks();document.getElementById("chunkVal").textContent=state.chunkSize;document.getElementById("chunkList").innerHTML=chunkHtml(state.chunks);document.querySelector(".topline strong").textContent=state.chunks.length+" chunks created";};document.getElementById("chunkList").innerHTML=chunkHtml(state.chunks);}
+if(state.step===3){buildChunks();c.innerHTML=head(3,"Create embeddings & index","In a real RAG system, an embedding model converts each chunk into a vector: a list of numbers that captures aspects of meaning. Vectors are stored in an index for efficient search.")+`
+<div class="grid2"><div class="chunk"><h4>Text chunk</h4><p>${esc(state.chunks[0]?.text||"Add a document to begin.")}</p></div><div class="chunk"><h4>Illustrative vector</h4><div id="vector" style="display:flex;gap:5px;align-items:end;height:72px"></div><p class="tiny muted">Made-up values for visualization only—not real model embeddings.</p></div></div>
+<div class="controls"><button class="primary" id="regen">Generate illustrative vector</button></div>
+<div class="flow"><span>Chunk text</span><b>→</b><span>Embedding model</span><b>→</b><span>Vector index</span></div>
+<div class="callout"><strong>Important distinction:</strong> tokens/word IDs are not embeddings. A token ID identifies a token; an embedding is a learned numeric representation. Similar meanings can have vectors that are close in vector space.</div></div>`;
+drawVector();document.getElementById("regen").onclick=drawVector;}
+if(state.step===4){rankChunks();c.innerHTML=head(4,"Retrieve the most relevant chunks","The system compares the query with indexed chunks, ranks candidates, and sends the top matches onward. This demo uses keyword overlap as a transparent stand-in for semantic vector similarity.")+`
+<div class="field"><label for="retrQuery">Query</label><input id="retrQuery" value="${esc(state.query)}"></div>
+<div class="grid2"><div class="field"><label for="topK">Top-k chunks to retrieve</label><select id="topK"><option value="1">1 chunk</option><option value="2">2 chunks</option><option value="3">3 chunks</option><option value="4">4 chunks</option></select></div><div class="field"><label>Query terms</label><div>${[...new Set(tokenize(state.query))].map(t=>`<span class="pill blue">${esc(t)}</span>`).join("")||"No searchable terms"}</div></div></div>
+<div class="controls"><button class="primary" id="runRetrieval">Run retrieval</button></div><h3>Ranking</h3><p class="tiny muted">Score = query terms found in chunk ÷ number of query terms. This is not a production similarity score.</p><div id="ranking"></div><h3>Selected context (top-k)</h3><div id="selected"></div>
+<div class="callout"><strong>Watch out:</strong> a high score does not guarantee truth. Production systems may use vector search, keyword search, metadata filters, rerankers, and access-control rules.</div></div>`;
+document.getElementById("topK").value=String(state.topK);document.getElementById("retrQuery").onkeydown=e=>{if(e.key==="Enter")document.getElementById("runRetrieval").click();};document.getElementById("runRetrieval").onclick=()=>{state.query=document.getElementById("retrQuery").value;state.topK=+document.getElementById("topK").value;rankChunks();render();};document.getElementById("ranking").innerHTML=rankHtml(state.ranked);document.getElementById("selected").innerHTML=state.selected.length?chunkHtml(state.selected,true):`<p class="muted">No matching chunks selected. Try a different question.</p>`;}
+if(state.step===5){rankChunks();c.innerHTML=head(5,"Generate a grounded answer","The retrieved passages are inserted into the prompt as context. The LLM uses the question plus this context to draft an answer. A well-designed system asks it to stay within the evidence and cite sources.")+`
+<div class="chunk"><h4>Prompt sent to the model (simplified)</h4><p><strong>Instruction:</strong> Answer using only the context. If the context does not contain the answer, say you could not find it. Cite the source document.</p><p><strong>Question:</strong> ${esc(state.query)}</p><p><strong>Context:</strong></p>${state.selected.length?chunkHtml(state.selected,true):"<p>No relevant context retrieved.</p>"}</div>
+<div class="callout"><strong>Simulated answer</strong><p style="margin:6px 0 0">${esc(state.answer)}</p></div>
+<div class="grid2"><div class="chunk"><h4>What RAG helps with</h4><p>Uses current or private source material, can show provenance, and lets you update knowledge without retraining the base model.</p></div><div class="chunk"><h4>What RAG does not guarantee</h4><p>Correct retrieval, complete context, correct reasoning, or zero hallucinations. Sources and answer quality still need evaluation.</p></div></div>
+<div class="quiz"><strong>Quick check</strong><p>Which step gives the LLM the document facts it should use?</p><div id="quizOptions"><label><input type="radio" name="quiz" value="a" style="width:auto"> Training the model again</label><label><input type="radio" name="quiz" value="b" style="width:auto"> Retrieving chunks and placing them in the prompt</label><label><input type="radio" name="quiz" value="c" style="width:auto"> Turning words into token IDs only</label></div><button id="checkQuiz" class="primary">Check answer</button><div class="feedback" id="feedback"></div></div></div>`;
+document.getElementById("checkQuiz").onclick=()=>{let v=document.querySelector('input[name="quiz"]:checked')?.value;let f=document.getElementById("feedback");f.textContent=v==="b"?"Correct! Retrieval supplies relevant passages as context.":"Not quite. Think about which step brings source text into the model's prompt.";f.style.color=v==="b"?"#087969":"#b45309";}}
+}
+function readDocs(){state.docs=state.docs.map((d,i)=>({name:document.querySelector(`[data-title="${i}"]`)?.value||d.name,text:document.querySelector(`[data-doc="${i}"]`)?.value||d.text}));}
+function chunkHtml(chunks,selected=false){return chunks.map(c=>`<div class="chunk ${selected?"selected":""}"><div class="topline"><h4>${esc(c.id)} · ${esc(c.doc)}</h4>${c.score!==undefined?`<span class="pill ${c.score>0?"green":""}">score ${c.score.toFixed(2)}</span>`:""}</div><p>${esc(c.text)}</p>${c.matches?`<p class="tiny muted">Matched terms: ${c.matches.map(esc).join(", ")||"none"}</p>`:""}</div>`).join("")||'<p class="muted">No chunks yet.</p>';}
+function rankHtml(items){return items.map(c=>`<div class="barrow"><span title="${esc(c.doc)}">${esc(c.id)} · ${esc(c.doc.length>15?c.doc.slice(0,14)+"…":c.doc)}</span><div class="bar"><div class="fill" style="width:${Math.round(c.score*100)}%;background:${c.score>0?"var(--teal)":"#cbd5e1"}"></div></div><span class="score">${c.score.toFixed(2)}</span></div>`).join("")||'<p class="muted">No chunks to rank.</p>';}
+function drawVector(){let seed=(state.chunks[0]?.text||"RAG").length;let vals=Array.from({length:12},(_,i)=>Math.abs(Math.sin(seed*(i+1)*1.37))*0.95+0.05);document.getElementById("vector").innerHTML=vals.map((v,i)=>`<div title="dimension ${i+1}: ${v.toFixed(2)}" style="flex:1;height:${12+v*58}px;background:${i%3===0?"#315efb":i%3===1?"#0f9d8a":"#9aa9c7"};border-radius:4px 4px 0 0"></div>`).join("");}
+document.querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>nav(+b.dataset.step)));
+updateAll();
+</script>
+</body>
+</html>
